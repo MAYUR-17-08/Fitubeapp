@@ -1,0 +1,41 @@
+name: Build Dedicated Android APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Expo CLI & Dependencies
+        run: |
+          npm install -g eas-cli
+          npm install
+
+      - name: Prebuild Native Android Project
+        run: npx expo prebuild --platform android
+
+      - name: Build Standalone APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload Native APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fitube-Dedicated-Release
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
